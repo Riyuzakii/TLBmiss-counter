@@ -1,0 +1,40 @@
+--- ../../../linux-4.19.13/arch/x86/mm/fault.c	2018-12-29 18:07:59.000000000 +0530
++++ fault.c	2019-01-27 09:59:37.398145215 +0530
+@@ -1202,6 +1202,12 @@
+ 	return true;
+ }
+ 
++/*Added by Deba for memory demonstration*/
++int page_fault_pid = -1;
++EXPORT_SYMBOL(page_fault_pid);
++int (*rsvd_fault_hook)(struct mm_struct *mm, struct pt_regs *regs, unsigned long error_code, unsigned long address) = NULL;
++EXPORT_SYMBOL(rsvd_fault_hook);
++
+ /*
+  * This routine handles page faults.  It determines the address,
+  * and the problem, and then passes it off to one of the appropriate
+@@ -1260,13 +1266,23 @@
+ 
+ 		return;
+ 	}
++        /*PF logging Added by Deba*/
++        if(unlikely(tsk->pid == page_fault_pid))
++             printk(KERN_INFO "Page fault occured pid [%d] address [%lx] error_code [%lx]\n", tsk->pid, address, error_code);
+ 
+ 	/* kprobes don't want to hook the spurious faults: */
+ 	if (unlikely(kprobes_fault(regs)))
+ 		return;
++         
++        if (unlikely(error_code & X86_PF_RSVD)){
++                if(!rsvd_fault_hook || rsvd_fault_hook(mm, regs, error_code, address))
++                       pgtable_bad(regs, error_code, address);
++                return;
++         }
++        /*XXX original code commented by Deba
+ 
+ 	if (unlikely(error_code & X86_PF_RSVD))
+-		pgtable_bad(regs, error_code, address);
++		pgtable_bad(regs, error_code, address);*/
+ 
+ 	if (unlikely(smap_violation(error_code, regs))) {
+ 		bad_area_nosemaphore(regs, error_code, address, NULL);

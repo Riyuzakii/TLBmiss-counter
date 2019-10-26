@@ -1,0 +1,43 @@
+SOURCE DESCRIPTION
+------------------
+
+mem_tracker.c: Creates the device and sysfs entries. NOT TO BE MODIFIED
+hook.c: Provides the template.  This is the only file to be modified and submitted
+mem_tracker.h: Several definitions provided. NOT TO BE MODIFIED
+interface.h: Definitions used both from user space and kernel space. NOT TO BE MODIFIED
+
+BUILD
+-----
+$make
+
+USE
+---
+$sudo insmod memtrack.ko
+
+This module creates a chardev (/dev/memtrack) and a bunch of sysfs entries.
+Check /sys/kernel/memtrack after loading the module. The sysfs count 
+variables (readwss, tlb_misses, unused, writewss) should be maintained correctly.
+The command variable is a way to enable different parts of the assignment.
+
+command == 0, the module should count tlb misses.
+command == 1, the module should count tlb misses (assuming PTI enabled).
+command == 2, the module should count the read and write working sets
+
+
+TODO
+----
+
+Task 0: Implement command passing through sysfs. See memtrack_command_set in hook.c. 
+        This API will be used before executing any of the test cases. 
+        Add the read implementation for handling commands to start the fault handler 
+        and collect stats when needed. Write implementations is same as the example
+        code given before.
+
+Task 1: Design the fault handler to carry out the commands (see mem_tracker.h) as specified
+        in the assignment document.
+
+NOTE
+----
+1. Disable transparent huge page support by modifying kernel sysfs configurations [DONE]
+2. Use KVM hypervisor, specially for TLB miss accounting with PTI [DONE]
+3. Submit only hook.c
